@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apply for Job</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Background Styling */
+        body {
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Form Container */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 400px;
+            max-width: 90%;
+            text-align: center;
+            color: white;
+        }
+
+        /* Page Title */
+        h1 {
+            font-size: 26px;
+            margin-bottom: 15px;
+        }
+
+        /* Input Field Styles */
+        input, textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            outline: none;
+        }
+
+        input::placeholder, textarea::placeholder {
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* File Input */
+        input[type="file"] {
+            background: rgba(255, 255, 255, 0.3);
+            padding: 8px;
+            border-radius: 5px;
+        }
+
+        /* Submit Button */
+        button {
+            background: #ffcc00;
+            color: #222;
+            border: none;
+            padding: 12px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.3s ease-in-out;
+        }
+
+        button:hover {
+            background: #e6b800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Apply for EventWork</h1>
+        <form id="applyForm" enctype="multipart/form-data">
+            <input type="hidden" id="jobId">
+
+            <label>First Name:</label>
+            <input type="text" id="firstName" placeholder="Enter your first name" required>
+
+            <label>Last Name:</label>
+            <input type="text" id="lastName" placeholder="Enter your last name" required>
+
+            <label>Email:</label>
+            <input type="email" id="email" placeholder="Enter your email" required>
+
+            <label>Skills:</label>
+            <input type="text" id="skills" placeholder="Enter your skills" required>
+
+            <label>Upload Resume (PDF):</label>
+            <input type="file" id="resume" accept=".pdf" required>
+
+            <button type="submit">Submit Application</button>
+        </form>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const urlParams = new URLSearchParams(window.location.search);
+            const jobId = urlParams.get("jobId");
+            document.getElementById("jobId").value = jobId;
+        });
+
+        document.getElementById("applyForm").addEventListener("submit", async function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            formData.append("jobId", document.getElementById("jobId").value);
+            formData.append("firstName", document.getElementById("firstName").value);
+            formData.append("lastName", document.getElementById("lastName").value);
+            formData.append("email", document.getElementById("email").value);
+            formData.append("skills", document.getElementById("skills").value);
+            formData.append("resume", document.getElementById("resume").files[0]);
+
+            const response = await fetch("http://localhost:5000/apply", {
+                method: "POST",
+                body: formData
+            });
+
+            if (response.ok) {
+                alert("Application submitted successfully!");
+                window.location.href = "find-job.html";
+            } else {
+                alert("Error submitting application.");
+            }
+        });
+    </script>
+</body>
+</html>

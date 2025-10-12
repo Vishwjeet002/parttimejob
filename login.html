@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="stylesheet" href="login.css">
+    <title>Login</title>
+</head>
+<body>
+    <div class="container">
+        <div class="login-form">
+            <h1>Login</h1>
+            <form onsubmit="loginUser(event)">
+                <div class="input-group">
+                    <span class="icon">&#128100;</span>
+                    <input type="text" id="username" name="username" placeholder="Username" required>
+                </div>
+                <div class="input-group">
+                    <span class="icon">&#128274;</span>
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <p class="register-link">Don't have an account? <a href="signup.html">Sign up</a></p>
+        </div>
+    </div>
+    <script>
+        async function loginUser(event) {
+            event.preventDefault();
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            if (!username || !password) {
+                alert("❌ Please enter your username and password!");
+                return;
+            }
+            try {
+                const response = await fetch('http://localhost:5000/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    alert("✅ Login Successful!");
+                    window.location.href = "index1.html";
+                } else {
+                    alert(`❌ ${data.error}`);
+                }
+            } catch (error) {
+                alert("❌ Error connecting to the server!");
+                console.error("Login Error:", error);
+            }
+        }
+    </script>
+</body>
+</html>
+
+<style>
+    body {
+        margin: 0;
+        font-family: 'Poppins', sans-serif;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background: url('./hack/icon5.jpg') no-repeat center/cover;
+    }
+    .container {
+        background: rgba(22, 21, 21, 0.4);
+        padding: 30px;
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        width: 350px;
+    }
+    .login-form h1 {
+        color: white;
+        margin-bottom: 20px;
+    }
+    .input-group {
+        display: flex;
+        align-items: center;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+        padding: 10px;
+        margin-bottom: 15px;
+    }
+    .input-group .icon {
+        margin-right: 10px;
+        color: white;
+    }
+    .input-group input {
+        background: none;
+        border: none;
+        outline: none;
+        color: white;
+        width: 100%;
+    }
+    .input-group input::placeholder {
+        color: rgba(255, 255, 255, 0.7);
+    }
+    button {
+        width: 100%;
+        padding: 10px;
+        border: none;
+        border-radius: 8px;
+        background: #ff8c00;
+        color: white;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+    button:hover {
+        background: #e07b00;
+    }
+    .register-link {
+        margin-top: 15px;
+        color: white;
+    }
+    .register-link a {
+        color: #ffd700;
+        text-decoration: none;
+    }
+    .register-link a:hover {
+        text-decoration: underline;
+    }
+</style>

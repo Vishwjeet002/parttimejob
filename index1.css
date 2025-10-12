@@ -1,0 +1,138 @@
+/* Global Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Poppins', sans-serif;
+}
+
+body {
+  background: url('icon7.jpg') no-repeat center/cover;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 100vh;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 30px;
+  background: rgba(123, 110, 110, 0.85);
+  color: white;
+}
+
+.logo {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.highlight {
+  color: #ff9800;
+}
+
+/* Navigation */
+nav ul {
+  list-style: none;
+  display: flex;
+  gap: 20px;
+}
+
+nav ul li a {
+  text-decoration: none;
+  font-size: 18px;
+  color: white;
+  transition: 0.3s;
+}
+
+nav ul li a:hover {
+  color: #ffa500;
+}
+
+/* Hero Section */
+.hero {
+  text-align: center;
+  color: white;
+  padding: 80px 20px;
+  height: 500px;
+  margin-top: 150px;
+}
+
+.hero h2 {
+  font-size: 36px;
+  align-items: center;
+  
+}
+
+
+.hero-buttons a {
+  text-decoration: none;
+  font-size: 18px;
+  padding: 12px 20px;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+.offer-job-btn {
+  background-color: #28a745;
+  color: white;
+}
+
+.offer-job-btn:hover {
+  background-color: #218838;
+  transform: scale(1.05);
+}
+
+.find-job-btn {
+  background-color: #007bff;
+  color: white;
+}
+
+.find-job-btn:hover {
+  background-color: #0056b3;
+  transform: scale(1.05);
+}
+
+/* Image Section */
+.image-section {
+  height: 500px;
+  background-size: cover;
+  transition: background 1s ease-in-out;
+}
+
+/* Statistics */
+.statistics {
+  background: #ffffff;
+  text-align: center;
+  padding: 50px 0;
+}
+
+.stat {
+  display: inline-block;
+  margin: 20px;
+}
+
+.stat i {
+  font-size: 40px;
+  color: #007bff;
+}
+
+/* Footer */
+footer {
+  background-color: #0e0e1a;
+  color: white;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: white;
+  margin: 0 15px;
+}
+
+.footer-links a:hover {
+  color: #ffa500;
+}

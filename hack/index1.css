@@ -1,0 +1,83 @@
+
+body, html {
+    margin: 0;
+    padding: 0;
+    background: url('icon7.jpg');
+  }
+
+  .logo {
+    position: absolute;
+    top: 10px; /* Adjust for spacing from the top */
+    width: 100px;
+    left:0px; /* Adjust for spacing from the left */
+    font-size: 24px; /* Adjust font size */
+    font-weight: bold;
+    color: whitesmoke; /* Text color */
+  }
+  
+  /* Centering the navigation menu */
+  nav {
+    content: "•";
+    display: flex;
+    justify-content: center;
+    position: absolute;
+    top: 10px; /* Adjust for spacing from the top */
+    width: 100%;
+  }
+  
+  nav ul {
+    list-style: none;
+    display: flex;
+    gap: 20px; /* Adjust for spacing between menu items */
+    padding: 0;
+    margin: 0;
+  }
+  
+  nav ul li {
+    content: "•";
+    display: inline;
+  }
+  
+  nav ul li a {
+    content: "•";
+    text-decoration: none;
+    font-size: 20px;
+    font-weight: bold;
+    color: white; /* Adjust color */
+  }
+  
+  /* Styling the buttons in the top-right */
+  .buttons {
+    position: absolute;
+    top: 10px; /* Adjust for spacing */
+    right: 10px; /* Adjust for spacing */
+    display: flex;
+    gap: 10px; /* Spacing between buttons */
+  }
+  
+  .buttons button {
+    background-color: #000; /* Button background color */
+    color: white; /* Button text color */
+    border: none;
+    padding: 10px 15px; /* Button padding */
+    cursor: pointer;
+    font-size: 16px;
+    border-radius: 5px; /* Optional: rounded corners */
+  }
+  
+  .buttons button:hover {
+    background-color: #333; /* Hover effect */
+  }
+  
+  /* Centering the subtitle */
+  .subtitle {
+    position: absolute;
+    top: 50%; /* Center vertically */
+    left: 50%; /* Center horizontally */
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color:#f7f3f3;/* Text color */
+    font-size: 30px; /* Adjust size */
+    font-weight: bold; /* Make it bold */
+  }
+  

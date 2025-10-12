@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find a Job</title>
+    <style>
+        /* General Reset */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Background Styling */
+        body {
+            background: linear-gradient(to right, #1e3c72, #2a5298);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        /* Main Container */
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            width: 700px;
+            max-width: 90%;
+            text-align: center;
+            color: white;
+        }
+
+        /* Page Title */
+        h1 {
+            font-size: 26px;
+            margin-bottom: 20px;
+        }
+
+        /* Job Listings Layout */
+        .job-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+        }
+
+        /* Job Box Styling */
+        .job-box {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            text-align: left;
+            transition: transform 0.3s ease-in-out;
+        }
+
+        .job-box:hover {
+            transform: translateY(-5px);
+        }
+
+        /* Job Title */
+        .job-box h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+            color: #fff;
+        }
+
+        /* Job Details */
+        .job-box p {
+            font-size: 14px;
+            color: #f1f1f1;
+            margin-bottom: 10px;
+        }
+
+        /* Apply Button */
+        .job-box button {
+            background: #ffcc00;
+            color: #222;
+            border: none;
+            padding: 10px 15px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: background 0.3s ease-in-out;
+        }
+
+        .job-box button:hover {
+            background: #e6b800;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>HireHub</h1>
+        <div id="jobList" class="job-list"></div>
+    </div>
+
+    <script>
+        async function fetchJobs() {
+            const response = await fetch("http://localhost:5000/jobs");
+            const jobs = await response.json();
+
+            const jobList = document.getElementById("jobList");
+            jobList.innerHTML = "";
+            
+            jobs.forEach(job => {
+                jobList.innerHTML += `
+                    <div class="job-box">
+                        <h2>${job.position}</h2>
+                        <p><strong>Requirement:</strong> ${job.vacancies}</p>
+                        <p><strong>Skill Required:</strong> ${job.requirements}</p>
+                        <button onclick="applyJob('${job.id}')">Apply Now</button>
+                    </div>
+                `;
+            });
+        }
+
+        function applyJob(jobId) {
+            window.location.href = `apply.html?jobId=${jobId}`;
+        }
+
+        fetchJobs();
+    </script>
+</body>
+</html>

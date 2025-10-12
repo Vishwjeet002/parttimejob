@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="./signup.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Sign Up</h1>
+        <h3>Welcome!</h3>
+        <form onsubmit="registerUser(event)">
+            <div class="input-group">
+                <span class="icon">&#128100;</span>
+                <input type="text" id="username" name="username" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <span class="icon">&#128274;</span>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+
+            <button type="submit">Sign Up</button>
+        </form>
+    </div>
+
+    <script>
+    async function registerUser(event) {
+        event.preventDefault(); 
+
+        const username = document.getElementById('username').value.trim();
+        const password = document.getElementById('password').value.trim();
+
+        if (!username || !password) {
+            alert("❌ Please fill in all required fields!");
+            return;
+        }
+
+        try {
+            const response = await fetch('http://localhost:5000/register', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }) 
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("✅ Signup Successful!");
+                window.location.href = "login.html";
+            } else {
+                alert(`❌ ${data.error}`);
+            }
+        } catch (error) {
+            alert("❌ Error connecting to the server!");
+            console.error("Signup Error:", error);
+        }
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+/* Global Styles */
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  line-height: 1.6;
+}
+
+/* Header Styles */
+.header {
+  background: url('about uss.jpg') no-repeat center center/cover;
+  color: white;
+  text-align: center;
+  padding: 50px 20px;
+}
+
+.header-content h1 {
+  font-size: 3em;
+  margin-bottom: 10px;
+}
+
+.header-content p {
+  font-size: 1.2em;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Main Content Styles */
+.main-content {
+  padding: 50px 20px;
+}
+
+/* Company Info Section */
+.company-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 50px;
+}
+
+.content-wrapper {
+  max-width: 50%;
+}
+
+.image-wrapper img {
+  width: 100%;
+  max-width: 500px;
+  border-radius: 10px;
+}
+
+.company-info h2 {
+  font-size: 2em;
+  margin-bottom: 15px;
+}
+
+.company-info p {
+  margin-bottom: 15px;
+}
+
+/* Customer Stats Section */
+.customer-stats {
+  text-align: center;
+}
+
+.customer-stats h2 {
+  font-size: 2.5em;
+  margin-bottom: 20px;
+}
+
+.customer-stats .stats {
+  font-size: 3em;
+  color: #333;
+  margin-bottom: 15px;
+}
+
+.customer-stats p {
+  max-width: 600px;
+  margin: 0 auto;
+}
