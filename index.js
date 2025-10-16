@@ -1,5 +1,8 @@
+// index.js
+require('dotenv').config(); // load .env at top
+
 const express = require('express');
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise'); // promise-based mysql2
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -12,190 +15,192 @@ app.use(cors());
 app.use(express.json());
 app.use(cookieParser());
 
+// load secrets from environment
+const {
+  DB_HOST,
+  DB_USER,
+  DB_PASSWORD,
+  DB_NAME,
+  DB_PORT,
+  JWT_SECRET,
+  PORT
+} = process.env;
 
+if (!DB_HOST || !DB_USER || !DB_PASSWORD || !DB_NAME) {
+  console.error('Missing required DB env variables. Check your .env file.');
+  process.exit(1);
+}
 
+const SECRET_KEY = JWT_SECRET || 'jwt_secret';
 
-const SECRET_KEY = 'jwt_secret';
-
-// ✅ Connect to MySQL
-const connection = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '4205',
-    database: 'nokari'
+// create a pool for better production behavior
+const pool = mysql.createPool({
+  host: DB_HOST,
+  user: DB_USER,
+  password: DB_PASSWORD,
+  database: DB_NAME,
+  port: DB_PORT ? Number(DB_PORT) : 3306,
+  waitForConnections: true,
+  connectionLimit: 10,
+  queueLimit: 0,
 });
 
-connection.connect(err => {
-    if (err) throw err;
-    console.log("✅ Connected to MySQL Database");
-});
-
-
+// quick test of the connection on startup
+(async () => {
+  try {
+    const conn = await pool.getConnection();
+    console.log('✅ Connected to MySQL (pool).');
+    conn.release();
+  } catch (err) {
+    console.error('❌ MySQL connection failed:', err.message);
+    process.exit(1);
+  }
+})();
 
 // Serve uploaded resumes
-app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// Configure File Upload Storage
+// Configure File Upload Storage (multer)
 const storage = multer.diskStorage({
-    destination: 'uploads/',
-    filename: (req, file, cb) => {
-        cb(null, Date.now() + path.extname(file.originalname));
-    }
+  destination: path.join(__dirname, 'uploads'),
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  }
 });
 const upload = multer({ storage });
 
-// Fetch All Jobs with Remaining Vacancies
-app.get('/jobs', (req, res) => {
-    const query = `
-        SELECT id, position, vacancies, filled_positions, 
-               (vacancies - filled_positions) AS remaining_vacancies, requirements
-        FROM jobs
-    `;
+// ---------- ROUTES (converted to async/await) ---------- //
 
-    connection.query(query, (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-    });
+// Fetch All Jobs with Remaining Vacancies
+app.get('/jobs', async (req, res) => {
+  try {
+    const query = `
+      SELECT id, position, vacancies, filled_positions,
+             (vacancies - filled_positions) AS remaining_vacancies, requirements
+      FROM jobs
+    `;
+    const [rows] = await pool.query(query);
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Post a New Job
-app.post('/jobs', (req, res) => {
+app.post('/jobs', async (req, res) => {
+  try {
     const { position, vacancies, requirements } = req.body;
-
     const query = `INSERT INTO jobs (position, vacancies, filled_positions, requirements) VALUES (?, ?, 0, ?)`;
-    connection.query(query, [position, vacancies, requirements], (err, result) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.status(201).send("✅ Job posted successfully");
-    });
+    await pool.query(query, [position, vacancies, requirements]);
+    res.status(201).send('✅ Job posted successfully');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Submit a Job Application
-app.post('/apply', upload.single('resume'), (req, res) => {
+app.post('/apply', upload.single('resume'), async (req, res) => {
+  try {
     const { jobId, firstName, lastName, email, skills } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({ error: 'Resume file is required' });
+    }
     const resumePath = `/uploads/${req.file.filename}`;
 
-    // Check if there are remaining vacancies
-    connection.query(`SELECT vacancies, filled_positions FROM jobs WHERE id = ?`, [jobId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
+    // Check remaining vacancies
+    const [jobs] = await pool.query(`SELECT vacancies, filled_positions FROM jobs WHERE id = ?`, [jobId]);
+    if (jobs.length === 0) {
+      return res.status(404).json({ error: 'Job not found' });
+    }
 
-        if (results.length === 0) {
-            return res.status(404).json({ error: "Event not found" });
-        }
+    const { vacancies, filled_positions } = jobs[0];
+    if (filled_positions >= vacancies) {
+      return res.status(400).json({ error: 'No vacancies left for this job' });
+    }
 
-        const { vacancies, filled_positions } = results[0];
-        if (filled_positions >= vacancies) {
-            return res.status(400).json({ error: "No vacancies left for this Event" });
-        }
+    // Insert application
+    const insertQuery = `
+      INSERT INTO applications (job_id, first_name, last_name, email, skills, resume)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    await pool.query(insertQuery, [jobId, firstName, lastName, email, skills, resumePath]);
 
-        // Insert Application
-        const insertQuery = `
-            INSERT INTO applications (job_id, first_name, last_name, email, skills, resume)
-            VALUES (?, ?, ?, ?, ?, ?)
-        `;
+    // Update counts
+    const updateQuery = `
+      UPDATE jobs
+      SET filled_positions = filled_positions + 1,
+          vacancies = GREATEST(vacancies - 1, 0)
+      WHERE id = ?
+    `;
+    await pool.query(updateQuery, [jobId]);
 
-        connection.query(insertQuery, [jobId, firstName, lastName, email, skills, resumePath], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-
-            // Update Filled Positions and Decrease Vacancies
-            const updateQuery = `
-                UPDATE jobs 
-                SET filled_positions = filled_positions + 1, 
-                    vacancies = vacancies - 1 
-                WHERE id = ?
-            `;
-            connection.query(updateQuery, [jobId], (err, updateResult) => {
-                if (err) return res.status(500).json({ error: err.message });
-                res.status(200).send("✅ Application submitted successfully & Requirement updated");
-            });
-        });
-    });
+    res.status(200).send('✅ Application submitted successfully & Requirement updated');
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
 // Fetch Applicants for a Job
-app.get('/applicants/:jobId', (req, res) => {
+app.get('/applicants/:jobId', async (req, res) => {
+  try {
     const jobId = req.params.jobId;
-
     const query = `SELECT first_name, last_name, email, skills, resume FROM applications WHERE job_id = ?`;
-    connection.query(query, [jobId], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        if (results.length === 0) {
-            return res.json({ message: "No applicants yet." });
-        }
-
-        res.json(results);
-    });
+    const [rows] = await pool.query(query, [jobId]);
+    if (!rows.length) return res.json({ message: 'No applicants yet.' });
+    res.json(rows);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-
-
-
-
-// ✅ Signup Route (Only Username & Password)
-app.post('/register', (req, res) => {
+// Signup Route
+app.post('/register', async (req, res) => {
+  try {
     const { username, password } = req.body;
+    if (!username || !password) return res.status(400).json({ error: 'Username and Password are required' });
 
-    if (!username || !password) {
-        return res.status(400).json({ error: '❌ Username and Password are required!' });
+    const hash = await bcrypt.hash(password, 10);
+    const sql = 'INSERT INTO users (username, password_hash) VALUES (?, ?)';
+    await pool.query(sql, [username, hash]);
+    res.json({ message: '✅ User registered successfully!' });
+  } catch (err) {
+    console.error(err);
+    // handle duplicate username error
+    if (err.code === 'ER_DUP_ENTRY') {
+      return res.status(409).json({ error: 'Username already exists' });
     }
-
-    bcrypt.hash(password, 10, (err, hash) => {
-        if (err) return res.status(500).json({ error: err.message });
-
-        const sql = 'INSERT INTO users (username, password_hash) VALUES (?, ?)';
-        connection.query(sql, [username, hash], (err, result) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: '✅ User registered successfully!' });
-        });
-    });
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ✅ Login Route (Verify Username & Password)
-app.post('/login', (req, res) => {
+// Login Route
+app.post('/login', async (req, res) => {
+  try {
     const { username, password } = req.body;
-
     const sql = 'SELECT * FROM users WHERE username = ?';
-    connection.query(sql, [username], (err, results) => {
-        if (err) return res.status(500).json({ error: err.message });
+    const [rows] = await pool.query(sql, [username]);
 
-        if (results.length === 0) {
-            return res.status(401).json({ error: '❌ User not found!' });
-        }
+    if (rows.length === 0) return res.status(401).json({ error: 'User not found' });
 
-        const user = results[0];
-        bcrypt.compare(password, user.password_hash, (err, isMatch) => {
-            if (err) return res.status(500).json({ error: err.message });
+    const user = rows[0];
+    const isMatch = await bcrypt.compare(password, user.password_hash);
+    if (!isMatch) return res.status(401).json({ error: 'Incorrect password' });
 
-            if (!isMatch) {
-                return res.status(401).json({ error: '❌ Incorrect password!' });
-            }
-
-            const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' });
-
-            res.cookie('token', token, { httpOnly: true }).json({ message: '✅ Login successful!', token });
-        });
-    });
+    const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '1h' });
+    res.cookie('token', token, { httpOnly: true }).json({ message: '✅ Login successful!', token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
+  }
 });
 
-// ✅ Start Server
-app.listen(5000, () => {
-    console.log("🚀 Server running on port 5000");
+// Start Server
+const port = PORT || 5000;
+app.listen(port, () => {
+  console.log(`🚀 Server running on port ${port}`);
 });
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// // Start Server
-// app.listen(5000, () => {
-//     console.log("🚀 Server running on port 5000");
-// });

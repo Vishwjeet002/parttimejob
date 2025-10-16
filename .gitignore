@@ -17,3 +17,6 @@ yarn-error.log*
 .vscode/
 .idea/
 .DS_Store
+node_modules/
+.env
+uploads/
